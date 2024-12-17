@@ -1,20 +1,37 @@
 local textures = require'texture'
 
-local finShader
-local fadeShader
+local shaders = {
+	nametable = {},
+}
+shaders.__index = shaders
+shaders = setmetatable(shaders, shaders)
+
+function shaders:create (name)
+	return function (shaderCode)
+		local outs = love.graphics.newShader(shaderCode)
+		self.nametable[name] = outs
+		return outs
+	end
+end
+
+function shaders:__call (name)
+	local outs = self.nametable[name]
+	if not outs then
+		error(('shader with name %s doesnt exist'):format(name))
+	end
+	return outs
+end
 
 local wide = -1
 local tall = -1
 
 local fade = 0.9
 
+local invalidate = true
 local appsurface
 local pevsurface
 local pevsurface2
 
-local function createScreenBuffer ()
-	return love.graphics.newCanvas(wide, tall)
-end
 
 local function draw ()
 	local mx, my = love.mouse.getPosition()
@@ -22,8 +39,9 @@ local function draw ()
 	
 	
 	local picWide = room:getWidth()
-	
-	local ofs = (mx / wide) * (picWide - wide)
+	local ww, wh = love.window.getMode()
+
+	local ofs = (mx / ww) * (picWide - ww)
 	
 	love.graphics.push()
 	love.graphics.translate(-ofs, 0)
@@ -54,17 +72,11 @@ local function drawGui ()
 	love.graphics.print(text:format(wide, tall, mx, my), 320, 240)
 end
 
-local function tryRenderAppsurface ()
-	if not appsurface then
-		appsurface = createScreenBuffer()
-	end
-	appsurface:renderTo(draw)
-end
 
 function love.load ()
-	finShader = love.graphics.newShader [[
+	shaders:create 'fin' [[
 		uniform Image pev;
-
+	
 		vec4 effect (vec4 color, Image tex, vec2 texture_coords, vec2 screen_coords)
 		{
 			vec4 app_pix = Texel(tex, texture_coords);
@@ -73,9 +85,9 @@ function love.load ()
 		}
 	]]
 
-	fadeShader = love.graphics.newShader [[
+	shaders:create 'fade' [[
 		uniform Image appsurface;
-
+	
 		vec4 effect (vec4 color, Image tex, vec2 texture_coords, vec2 screen_coords)
 		{
 			vec4 fade_pix = Texel(tex, texture_coords);
@@ -85,30 +97,36 @@ function love.load ()
 	]]
 end
 
+function love.resize (wide, tall)
+	invalidate = true
+end
 
 function love.draw ()
 	local wwide, wtall = love.window.getMode()
-	if wwide ~= wide or wtall ~= tall then
+	
+	if invalidate then
 		if appsurface then
 			appsurface:release()
-			if pevsurface then
-				pevsurface:release()
-				pevsurface = nil
-				pevsurface2:release()
-				pevsurface2 = nil
-			end
 			appsurface = nil
-
 		end
-		wide = wwide
-		tall = wtall
-	end
 	
-	tryRenderAppsurface()
+		if pevsurface then
+			pevsurface:release()
+			pevsurface2:release()
+			pevsurface = nil
+			pevsurface2 = nil
+		end
+		invalidate = false
+	end
+
+	if not appsurface then
+		appsurface = love.graphics.newCanvas()
+	end
+	appsurface:renderTo(draw)
 
 	if not pevsurface then
-		pevsurface = createScreenBuffer()
-		pevsurface2 = createScreenBuffer()
+		pevsurface = love.graphics.newCanvas()
+		pevsurface2 = love.graphics.newCanvas()
 
 		local function aaa ()
 			love.graphics.draw(appsurface, 0, 0)
@@ -120,6 +138,7 @@ function love.draw ()
 	end
 	
 	pevsurface2:renderTo(function ()
+		local fadeShader = shaders 'fade'
 		fadeShader:send('appsurface', appsurface)
 		love.graphics.setShader(fadeShader)
 		love.graphics.draw(pevsurface, 0, 0)
@@ -127,6 +146,7 @@ function love.draw ()
 	end)
 	pevsurface2, pevsurface = pevsurface, pevsurface2
 
+	local finShader = shaders 'fin'
 	finShader:send('pev', pevsurface)
 	love.graphics.setShader(finShader)
 	love.graphics.draw(appsurface, 0, 0)
