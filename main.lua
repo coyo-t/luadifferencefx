@@ -10,13 +10,16 @@ local function tex (name)
 	return outs
 end
 
+local finShader
+
 local wide = -1
 local tall = -1
 
-local fade = 0.1
+local fade = 0.9
 
-local appsurface = nil
-local pevsurface = nil
+local appsurface
+local pevsurface
+local pevsurface2
 
 local function createScreenBuffer ()
 	return love.graphics.newCanvas(wide, tall)
@@ -48,12 +51,32 @@ local function tryRenderAppsurface ()
 	appsurface:renderTo(draw)
 end
 
+function love.load ()
+	finShader = love.graphics.newShader [[
+		uniform Image pev;
+
+		vec4 effect (vec4 color, Image tex, vec2 texture_coords, vec2 screen_coords)
+		{
+			vec4 app_pix = Texel(tex, texture_coords);
+			vec4 pev_pix = Texel(pev, texture_coords);
+			return vec4((app_pix.rgb - pev_pix.rgb) * 0.5 + 0.5, 1.0);
+		}
+	]]
+end
+
 function love.draw ()
 	local wwide, wtall = love.window.getMode()
 	if wwide ~= wide or wtall ~= tall then
 		if appsurface then
 			appsurface:release()
+			if pevsurface then
+				pevsurface:release()
+				pevsurface = nil
+				pevsurface2:release()
+				pevsurface2 = nil
+			end
 			appsurface = nil
+
 		end
 		wide = wwide
 		tall = wtall
@@ -63,20 +86,30 @@ function love.draw ()
 
 	if not pevsurface then
 		pevsurface = createScreenBuffer()
-		pevsurface:renderTo(function ()
-			love.graphics.setBlendMode 'replace'
+		pevsurface2 = createScreenBuffer()
+		
+		local function aaa ()
 			love.graphics.draw(appsurface, 0, 0)
-			love.graphics.setBlendMode 'alpha'
-		end)
+		end
+		
+		love.graphics.setBlendMode 'replace'
+		pevsurface:renderTo(aaa)
+		pevsurface2:renderTo(aaa)
+		love.graphics.setBlendMode 'alpha'
 	end
 	
 	pevsurface:renderTo(function ()
-		love.graphics.setColor(1, 1, 1, 0.5)
 		love.graphics.draw(appsurface, 0, 0)
+		love.graphics.setColor(1, 1, 1, fade)
+		love.graphics.draw(pevsurface2, 0, 0)
 		love.graphics.setColor(1, 1, 1, 1)
 	end)
 
+	love.graphics.setShader(finShader)
+	finShader:send('pev', pevsurface)
 	love.graphics.draw(appsurface, 0, 0)
-	pevsurface, appsurface = appsurface, pevsurface
+	love.graphics.setShader()
+	
+	pevsurface, pevsurface2 = pevsurface2, pevsurface
 
 end
