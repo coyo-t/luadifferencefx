@@ -11,16 +11,41 @@ local function tex (name)
 	return outs
 end
 
-local pevwide = -1
-local pevtall = -1
+local wide = -1
+local tall = -1
+
+local appsurface
+
+local function draw ()
+	local text = "WOW!!! %i %i"
+	
+	love.graphics.draw(room, 0, 0)
+	love.graphics.print(text:format(wide, tall), 320, 240)
+end
 
 function love.draw ()
 	local room = tex 'def'
 
-	local wide, tall = love.window.getMode()
+	do
+		local wwide, wtall = love.window.getMode()
+	
+		if wwide ~= wide or wtall ~= tall then
+			if appsurface then
+				appsurface:release()
+				appsurface = nil
+			end
+			wide = wwide
+			tall = wtall
+		end
+	end
 
-	local text = "WOW!!! %i %i"
+	if not appsurface then
+		appsurface = love.graphics.newCanvas(wide, tall)
+	end
 
-	love.graphics.draw(room, 0, 0)
-	love.graphics.print(text:format(wide, tall), 320, 240)
+	if appsurface then
+		appsurface:renderTo(draw)
+		love.graphics.draw(appsurface, 0, 0)
+	end
+
 end
