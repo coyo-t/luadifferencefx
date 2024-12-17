@@ -3,8 +3,6 @@ local textures = require'texture'
 local shaders = {
 	nametable = {},
 }
-shaders.__index = shaders
-shaders = setmetatable(shaders, shaders)
 
 function shaders:create (name)
 	return function (shaderCode)
@@ -21,6 +19,9 @@ function shaders:__call (name)
 	end
 	return outs
 end
+
+shaders.__index = shaders
+shaders = setmetatable(shaders, shaders)
 
 local wide = -1
 local tall = -1
