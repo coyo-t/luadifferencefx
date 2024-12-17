@@ -1,27 +1,5 @@
-local textures = require'texture'
-
-local shaders = {
-	nametable = {},
-}
-
-function shaders:create (name)
-	return function (shaderCode)
-		local outs = love.graphics.newShader(shaderCode)
-		self.nametable[name] = outs
-		return outs
-	end
-end
-
-function shaders:__call (name)
-	local outs = self.nametable[name]
-	if not outs then
-		error(('shader with name %s doesnt exist'):format(name))
-	end
-	return outs
-end
-
-shaders.__index = shaders
-shaders = setmetatable(shaders, shaders)
+local textures = require 'texture'
+local shaders  = require 'shader'
 
 local wide = -1
 local tall = -1
@@ -33,6 +11,27 @@ local appsurface
 local pevsurface
 local pevsurface2
 
+shaders:create 'fin' [[
+	uniform Image pev;
+
+	vec4 effect (vec4 color, Image tex, vec2 texture_coords, vec2 screen_coords)
+	{
+		vec4 app_pix = Texel(tex, texture_coords);
+		vec4 pev_pix = Texel(pev, texture_coords);
+		return vec4((app_pix.rgb - pev_pix.rgb) * 0.5 + 0.5, 1.0);
+	}
+]]
+
+shaders:create 'fade' [[
+	uniform Image appsurface;
+
+	vec4 effect (vec4 color, Image tex, vec2 texture_coords, vec2 screen_coords)
+	{
+		vec4 fade_pix = Texel(tex, texture_coords);
+		vec4 app_pix = Texel(appsurface, texture_coords);
+		return vec4(mix(app_pix.rgb, fade_pix.rgb, 0.3), 1.0);
+	}
+]]
 
 local function draw ()
 	local mx, my = love.mouse.getPosition()
@@ -75,27 +74,9 @@ end
 
 
 function love.load ()
-	shaders:create 'fin' [[
-		uniform Image pev;
-	
-		vec4 effect (vec4 color, Image tex, vec2 texture_coords, vec2 screen_coords)
-		{
-			vec4 app_pix = Texel(tex, texture_coords);
-			vec4 pev_pix = Texel(pev, texture_coords);
-			return vec4((app_pix.rgb - pev_pix.rgb) * 0.5 + 0.5, 1.0);
-		}
-	]]
 
-	shaders:create 'fade' [[
-		uniform Image appsurface;
-	
-		vec4 effect (vec4 color, Image tex, vec2 texture_coords, vec2 screen_coords)
-		{
-			vec4 fade_pix = Texel(tex, texture_coords);
-			vec4 app_pix = Texel(appsurface, texture_coords);
-			return vec4(mix(app_pix.rgb, fade_pix.rgb, 0.3), 1.0);
-		}
-	]]
+	shaders:_spinup()
+	collectgarbage()
 end
 
 function love.resize (wide, tall)
