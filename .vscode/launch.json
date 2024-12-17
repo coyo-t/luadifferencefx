@@ -1,0 +1,20 @@
+{
+	// https://www.love2d.org/forums/viewtopic.php?t=90410
+	"version": "0.2.0",
+	"configurations": [
+		{
+			"name": "Debug Lua Interpreter",
+			"type": "lua-local",
+			"request": "launch",
+			"program": {
+				"command": "C:/Program Files/LOVE/love.exe"
+			},
+			"args": [
+				"."
+			],
+			"scriptRoots": [
+				"."
+			],
+		},
+	]
+}
