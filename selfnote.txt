@@ -1,0 +1,5 @@
+love2d packaged executables are just the love.exe file with the game zip
+stapled onto the end
+can be created with HxD manually or via
+
+Get-Content love.exe,SuperGame.love -Encoding Byte | Set-Content SuperGame.exe -Encoding Byte
