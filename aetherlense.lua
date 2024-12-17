@@ -1,14 +1,4 @@
-local textures = {}
-
-local function tex (name)
-	local outs = textures[name]
-	if outs == nil then
-		local path = ('assets/%s.png'):format(name)
-		outs = love.graphics.newImage(path)
-		textures[name] = outs
-	end
-	return outs
-end
+local textures = require'texture'
 
 local finShader
 local fadeShader
@@ -28,7 +18,7 @@ end
 
 local function draw ()
 	local mx, my = love.mouse.getPosition()
-	local room = tex 'def'
+	local room = textures 'def'
 	
 	
 	local picWide = room:getWidth()
@@ -44,7 +34,7 @@ local function draw ()
 	love.graphics.push()
 	love.graphics.translate(64, 64)
 
-	local yote = tex 'birthdayyote2'
+	local yote = textures 'birthdayyote2'
 	local w = yote:getWidth()
 	local h = yote:getHeight()
 	love.graphics.translate(800, 400)
