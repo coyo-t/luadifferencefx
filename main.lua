@@ -13,6 +13,7 @@ end
 local wide = -1
 local tall = -1
 
+local fade = 0.1
 
 local appsurface = nil
 local pevsurface = nil
@@ -67,13 +68,15 @@ function love.draw ()
 			love.graphics.draw(appsurface, 0, 0)
 			love.graphics.setBlendMode 'alpha'
 		end)
-	else
-		pevsurface:renderTo(function ()
-			
-		end)
 	end
 	
-	love.graphics.draw(appsurface, 0, 0)
+	pevsurface:renderTo(function ()
+		love.graphics.setColor(1, 1, 1, 0.5)
+		love.graphics.draw(appsurface, 0, 0)
+		love.graphics.setColor(1, 1, 1, 1)
+	end)
 
+	love.graphics.draw(appsurface, 0, 0)
+	pevsurface, appsurface = appsurface, pevsurface
 
 end
