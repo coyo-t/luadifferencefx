@@ -11,6 +11,7 @@ local function tex (name)
 end
 
 local finShader
+local fadeShader
 
 local wide = -1
 local tall = -1
@@ -27,20 +28,39 @@ end
 
 local function draw ()
 	local mx, my = love.mouse.getPosition()
-	local text = "WOW!!! %i %i\nmouse (%i %i)"
 	local room = tex 'def'
 	
-
+	
 	local picWide = room:getWidth()
-
+	
 	local ofs = (mx / wide) * (picWide - wide)
-
+	
 	love.graphics.push()
 	love.graphics.translate(-ofs, 0)
+
+	
 	love.graphics.draw(room, 0, 0)
+	
+	love.graphics.push()
+	love.graphics.translate(64, 64)
+
+	local yote = tex 'birthdayyote2'
+	local w = yote:getWidth()
+	local h = yote:getHeight()
+	love.graphics.translate(800, 400)
+	love.graphics.rotate(math.rad(math.sin(love.timer.getTime() * math.pi) * 22.5))
+	love.graphics.translate(-w*0.5, -h*0.5)
+	love.graphics.draw(yote, 0, 0)
+	love.graphics.pop()
+	
 	love.graphics.pop()
 	
 	
+end
+
+local function drawGui ()
+	local mx, my = love.mouse.getPosition()
+	local text = "WOW!!! %i %i\nmouse (%i %i)"
 	love.graphics.print(text:format(wide, tall, mx, my), 320, 240)
 end
 
@@ -62,7 +82,19 @@ function love.load ()
 			return vec4((app_pix.rgb - pev_pix.rgb) * 0.5 + 0.5, 1.0);
 		}
 	]]
+
+	fadeShader = love.graphics.newShader [[
+		uniform Image appsurface;
+
+		vec4 effect (vec4 color, Image tex, vec2 texture_coords, vec2 screen_coords)
+		{
+			vec4 fade_pix = Texel(tex, texture_coords);
+			vec4 app_pix = Texel(appsurface, texture_coords);
+			return vec4(mix(app_pix.rgb, fade_pix.rgb, 0.3), 1.0);
+		}
+	]]
 end
+
 
 function love.draw ()
 	local wwide, wtall = love.window.getMode()
@@ -87,29 +119,31 @@ function love.draw ()
 	if not pevsurface then
 		pevsurface = createScreenBuffer()
 		pevsurface2 = createScreenBuffer()
-		
+
 		local function aaa ()
 			love.graphics.draw(appsurface, 0, 0)
 		end
 		
 		love.graphics.setBlendMode 'replace'
 		pevsurface:renderTo(aaa)
-		pevsurface2:renderTo(aaa)
 		love.graphics.setBlendMode 'alpha'
 	end
 	
-	pevsurface:renderTo(function ()
-		love.graphics.draw(appsurface, 0, 0)
-		love.graphics.setColor(1, 1, 1, fade)
-		love.graphics.draw(pevsurface2, 0, 0)
-		love.graphics.setColor(1, 1, 1, 1)
+	pevsurface2:renderTo(function ()
+		fadeShader:send('appsurface', appsurface)
+		love.graphics.setShader(fadeShader)
+		love.graphics.draw(pevsurface, 0, 0)
+		love.graphics.setShader()
 	end)
+	pevsurface2, pevsurface = pevsurface, pevsurface2
 
-	love.graphics.setShader(finShader)
 	finShader:send('pev', pevsurface)
+	love.graphics.setShader(finShader)
 	love.graphics.draw(appsurface, 0, 0)
 	love.graphics.setShader()
 	
-	pevsurface, pevsurface2 = pevsurface2, pevsurface
+	appsurface, pevsurface = pevsurface, appsurface
+
+	drawGui()
 
 end
