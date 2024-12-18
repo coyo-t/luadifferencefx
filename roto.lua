@@ -9,6 +9,21 @@ local function clampSym (x, radius)
 	return clamp(x, -radius, radius)
 end
 
+local vertexFormat = {
+	{"VertexPosition", "float", 3},
+	{"VertexTexCoord", "float", 2},
+}
+
+local vertices = {
+	{-0.5, -0.5, -0.5, 0, 0},
+	{ 0.5, -0.5, -0.5, 1, 1},
+	{ 0.5,  0.5, -0.5, 0, 1},
+
+}
+
+local mesh = love.graphics.newMesh(vertexFormat, vertices, "triangles")
+
+
 local viewPitch = 0
 local viewYaw = 0
 local viewRetard = 1/6
@@ -43,6 +58,11 @@ function love.update (dt)
 end
 
 function love.draw ()
+	love.graphics.push()
+	love.graphics.scale(256, 256)
+	love.graphics.draw(mesh, 0, 0)
+	love.graphics.pop()
+
 	local txt = ('%.8f %.8f'):format(viewPitch, viewYaw)
 	love.graphics.print(txt, 320, 240)
 end
