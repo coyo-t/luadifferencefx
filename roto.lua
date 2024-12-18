@@ -114,6 +114,8 @@ function love.draw ()
 end
 
 function love.load ()
+	-- love.graphics.setLineStyle'rough'
+	-- love.graphics.setLineWidth(1)
 	love.mouse.setRelativeMode(true)
 end
 
