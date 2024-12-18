@@ -1,3 +1,9 @@
+local shaders = require 'shader'
+
+shaders:create '3d' [[
+	
+]]
+
 local min = math.min
 local max = math.max
 local sin = math.sin
@@ -17,15 +23,15 @@ local function clampSym (x, radius)
 end
 
 local vertexFormat = {
-	{"VertexPosition", "float", 3},
-	{"VertexTexCoord", "float", 2},
+	{ "VertexPosition", "float", 3 },
+	-- { "VertexTexCoord", "float", 2 },
+	{ "VertexColor",    "float", 4 },
 }
 
 local vertices = {
-	{-0.5, -0.5, -0.5, 0, 0},
-	{ 0.5, -0.5, -0.5, 1, 1},
-	{ 0.5,  0.5, -0.5, 0, 1},
-
+	{ 1, 0, 0, 1,0,0,1 },
+	{ 0, 1, 0, 1,1,0,1 },
+	{ 0, 0, 1, 0,1,1,1 },
 }
 
 local mesh = love.graphics.newMesh(vertexFormat, vertices, "triangles")
@@ -57,9 +63,14 @@ local function updateView ()
 	viewFlatForward[1] = yawSin
 	viewFlatForward[2] = yawCos
 
+	viewForward[1] = yawSin
+	viewForward[2] = yawCos
+	viewRight[1] = -yawCos
+	viewRight[2] = yawSin
+
 	viewMatrix:setMatrix(
-		1, 0, 0, 0,
-		0, 1, 0, 0,
+		viewRight[1],   viewRight[2],   viewRight[3],   0,
+		viewForward[1], viewForward[2], viewForward[3], 0,
 		0, 0, 1, 0,
 		0, 0, 0, 1
 	)
@@ -98,15 +109,14 @@ function love.draw ()
 	love.graphics.push 'all'
 	love.graphics.origin()
 	love.graphics.translate(ww*0.5, wh*0.5)
-	love.graphics.scale(1, -1)
+	-- love.graphics.scale(1, -1)
 
 	local sz = 64
-	local vx = viewFlatForward[1] * sz
-	local vy = viewFlatForward[2] * sz
-	love.graphics.setColor(1, 1, 0, 1)
-	love.graphics.line(0, 0, vx, vy)
-	love.graphics.setColor(1, 0, 0, 1)
-	love.graphics.line(0, 0, vy, -vx)
+
+	love.graphics.applyTransform(viewMatrix)
+	love.graphics.scale(sz)
+	love.graphics.draw(mesh, 0, 0)
+
 	love.graphics.pop()
 
 	local txt = ('%.8f %.8f'):format(viewPitch, viewYaw)
