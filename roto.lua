@@ -1,8 +1,13 @@
 local shaders = require 'shader'
 
-shaders:create '3d' [[
+shaders:create '3d' {
+	vertex = [[
 	
-]]
+	]],
+	fragment = [[
+	
+	]]
+}
 
 local min = math.min
 local max = math.max
