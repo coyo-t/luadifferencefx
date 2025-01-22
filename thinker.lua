@@ -3,6 +3,7 @@ local t = {
 	callback = false,
 	thinkTime = 1,
 	nextThink = -1,
+	ticksExecuted = 0,
 }
 t.__index = t
 
@@ -11,9 +12,10 @@ function t:step ()
 	if t >= self.nextThink then
 		local cb = self.callback
 		if cb then
-			cb()
+			cb(self)
 		end
 		self.nextThink = t + self.thinkTime
+		self.ticksExecuted = self.ticksExecuted + 1
 		return true
 	end
 	return false

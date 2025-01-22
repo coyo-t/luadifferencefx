@@ -6,6 +6,7 @@ local bit = require'bit'
 local band = bit.band
 
 local clamp = math.clamp
+local max = math.max
 
 local math = math
 local floor = math.floor
@@ -65,10 +66,7 @@ function pic:step ()
 	for xx = 0, 15 do
 		for yy = 0, 15 do
 			local i6 = (xx + yy * 16) + 1
-			fbuffer_a[i6] = fbuffer_a[i6] + fbuffer_b[i6] * 0.05
-			if fbuffer_a[i6] < 0.0 then
-				fbuffer_a[i6] = 0.0
-			end
+			fbuffer_a[i6] = max(fbuffer_a[i6] + fbuffer_b[i6] * 0.05, 0.0)
 			if random() < 0.05 then
 				fbuffer_b[i6] = 0.5
 			else
@@ -83,8 +81,8 @@ function pic:step ()
 	for i8 = 1, 256 do
 		local f1 = clamp(field_1158_g[i8], 0, 1) ^ 2
 		local i9 = floor(10 + f1 * 21)
-		local i10 = floor(50 + f1 * 64)
 		if self.c then
+			local i10 = floor(50 + f1 * 64)
 			i9 = (i9 * 30 + i10 * 59 + 2805) / 100
 		end
 		i9 = band(i9, 0xFF)
@@ -100,7 +98,7 @@ local displayPic
 local displayGrid
 
 function love.load ()
-	love.graphics.setDefaultFilter('nearest', 'nearest')
+	love.graphics.setDefaultFilter'nearest'
 
 	local pic_w = pic.wide
 	local pic_h = pic.tall
@@ -124,11 +122,28 @@ function love.keypressed (k)
 	end
 end
 
+local lastmod = -1
+local displayMessage = ''
 local thinker = require'thinker'(
 	20,
-	function ()
-		pic:step()
-		displayPic:replacePixels(pic.imageData)
+	function (self)
+		local path = 'ticker.lua'
+		local f = love.filesystem.getInfo(path)
+		if f.modtime ~= lastmod then
+			local status, res = pcall(dofile(path))
+			if status then
+				pic.step = res
+			else
+				displayMessage = tostring(self.ticksExecuted)..' '..tostring(res)
+			end
+		end
+		print(tostring(pic))
+		local status, res = pcall(pic.step, pic)
+		if status then
+			displayPic:replacePixels(pic.imageData)
+		else
+			displayMessage = tostring(self.ticksExecuted)..' '..tostring(res)
+		end
 	end
 )
 
@@ -141,5 +156,6 @@ function love.draw ()
 	love.graphics.scale(16)
 	love.graphics.draw(displayGrid)
 	love.graphics.pop()
+	love.graphics.print(displayMessage, 32, 32)
 	-- love.graphics.draw(displayPic, 0, 0, 0.0, 16.0)
 end
