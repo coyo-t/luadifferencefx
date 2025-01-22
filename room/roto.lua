@@ -1,4 +1,5 @@
 local shaders = require 'coyote.shader'
+local camera = require 'coyote.camera'
 
 shaders:create '3d' {
 	vertex = [[
@@ -25,7 +26,6 @@ local mesh = love.graphics.newMesh(vertexFormat, vertices, "triangles")
 
 local viewRetard = 1/6
 
-local camera = require 'camera'
 
 
 function love.mousemoved (x, y, dx, dy)

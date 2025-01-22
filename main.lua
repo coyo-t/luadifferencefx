@@ -1,6 +1,10 @@
 
-
-require
+local firstroom = (
 	-- 'aetherlense'
-	'roto'
+	-- 'roto'
+	'dyntex'
+)
+
+
+require(('room.%s'):format(firstroom))
 
