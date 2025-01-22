@@ -1,5 +1,5 @@
-local textures = require 'texture'
-local shaders  = require 'shader'
+local textures = require 'coyote.texture'
+local shaders  = require 'coyote.shader'
 
 local wide = -1
 local tall = -1

@@ -1,4 +1,4 @@
-local shaders = require 'shader'
+local shaders = require 'coyote.shader'
 
 shaders:create '3d' {
 	vertex = [[

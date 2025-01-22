@@ -1,4 +1,4 @@
-require 'mth'
+require 'coyote.mth'
 
 local radians = math.rad
 local clampSym = math.clampSym
