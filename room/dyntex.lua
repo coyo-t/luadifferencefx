@@ -130,12 +130,13 @@ local thinker = require'thinker'(
 		local path = 'ticker.lua'
 		local f = love.filesystem.getInfo(path)
 		if f.modtime ~= lastmod then
-			local status, res = pcall(dofile(path))
+			local status, res = pcall(dofile, path)
 			if status then
 				pic.step = res
 			else
 				displayMessage = tostring(self.ticksExecuted)..' '..tostring(res)
 			end
+			lastmod = f.modtime
 		end
 		print(tostring(pic))
 		local status, res = pcall(pic.step, pic)

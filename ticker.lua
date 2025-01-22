@@ -10,10 +10,11 @@ return function (self)
 	local fbuffer_what = self.fbuffer_1
 	local fbuffer_a = self.fbuffer_a
 	local fbuffer_b = self.fbuffer_b
+	local scanlineRange = 1
 	for xx = 0, 15 do
 		for yy = 0, 15 do
 			local f = 0.0
-			for hh = xx - 1, xx + 1 do
+			for hh = xx - scanlineRange, xx + scanlineRange do
 				f = f + field_1158_g[(band(hh, 15) + band(yy, 15) * 16) + 1]
 			end
 			local index = (yy * 16 + xx) + 1
