@@ -1,17 +1,37 @@
+require'coyote.mth'
+
 local ffi = require'ffi'
 
 local bit = require'bit'
 local band = bit.band
 
+local clamp = math.clamp
+
+local math = math
 local floor = math.floor
 
+local function createFloatBuffer (size)
+	local outs = {}
+	for i = 1, size do
+		outs[i] = 0.0
+	end
+	return outs
+end
+
 local pic = {
-	wide = 32,
-	tall = 32,
+	wide = 16,
+	tall = 16,
 	-- placeholders
 	count = 0,
 	imageData = false,
 	grid = false,
+
+	fbuffer_0 = createFloatBuffer(256),
+	fbuffer_1 = createFloatBuffer(256),
+	fbuffer_a = createFloatBuffer(256),
+	fbuffer_b = createFloatBuffer(256),
+	tickCounter = 0,
+	c = false,
 }
 
 function pic:createImage ()
@@ -29,7 +49,65 @@ function pic:setPixelI (i, r, g, b, a)
 	end
 end
 
-local display
+function pic:swapBuffers ()
+	self.fbuffer_1, self.fbuffer_0 = self.fbuffer_0, self.fbuffer_1
+end
+
+function pic:step ()
+	self.tickCounter = self.tickCounter + 1
+	
+	local field_1158_g = self.fbuffer_0
+	local fbuffer_what = self.fbuffer_1
+	local fbuffer_a = self.fbuffer_a
+	local fbuffer_b = self.fbuffer_b
+	for xx = 0, 15 do
+		for yy = 0, 15 do
+			local f = 0.0
+			for hh = xx - 1, xx + 1 do
+				f = f + field_1158_g[(band(hh, 15) + band(yy, 15) * 16) + 1]
+			end
+			local index = (yy * 16 + xx) + 1
+			fbuffer_what[index] = f / 3.3 + fbuffer_a[index] * 0.8
+		end
+	end
+
+	local random = love.math.random
+	for xx = 0, 15 do
+		for yy = 0, 15 do
+			local i6 = (xx + yy * 16) + 1
+			fbuffer_a[i6] = fbuffer_a[i6] + fbuffer_b[i6] * 0.05
+			if fbuffer_a[i6] < 0.0 then
+				fbuffer_a[i6] = 0.0
+			end
+			if random() < 0.05 then
+				fbuffer_b[i6] = 0.5
+			else
+				fbuffer_b[i6] = fbuffer_b[i6] - 0.1
+			end
+		end
+	end
+
+	self:swapBuffers()
+	
+	local a = self.grid
+	for i8 = 1, 256 do
+		local f1 = clamp(field_1158_g[i8], 0, 1) ^ 2
+		local i9 = floor(10 + f1 * 21)
+		local i10 = floor(50 + f1 * 64)
+		if self.c then
+			i9 = (i9 * 30 + i10 * 59 + 2805) / 100
+		end
+		i9 = band(i9, 0xFF)
+		local j = (i8-1)*4
+		a[j + 0] = i9
+		a[j + 1] = i9
+		a[j + 2] = i9
+		a[j + 3] = 0xFF
+	end
+end
+
+local displayPic
+local displayGrid
 
 function love.load ()
 	love.graphics.setDefaultFilter('nearest', 'nearest')
@@ -42,25 +120,38 @@ function love.load ()
 	pic.grid = ffi.cast('uint8_t*', p:getFFIPointer())
 	pic.count = pic_w * pic_h
 	
-	local count = pic.count
-	local picptr = pic.grid
-	for i = 1, count do
-		local j = i - 1
-		local xx = j % pic_w
-		local yy = floor(j / pic_w)
-		xx = floor((xx / (pic_w-1)) * 0xFF)
-		yy = floor((yy / (pic_h-1)) * 0xFF)
-		local luma = bit.bxor(xx, yy)
 
-		pic:setPixelI(j, luma, luma, luma, 0xFF)
+	displayPic = pic:createImage()
+	displayGrid = love.graphics.newSpriteBatch(displayPic)
+
+	for xx = 1, 3 do
+		for yy = 1, 3 do
+			displayGrid:add((xx-1)*16, (yy-1)*16)
+		end
 	end
-	display = pic:createImage()
 end
 
-function love.update ()
+function love.keypressed (k)
+	if k == 'space' then
+		pic.c = not pic.c
+	end
+end
 
+local nextThink = -1
+local thinkTime = 1.0 / 20
+function love.update ()
+	local t = love.timer.getTime()
+	if t >= nextThink then
+		pic:step()
+		nextThink = t + thinkTime
+		displayPic:replacePixels(pic.imageData)
+	end
 end
 
 function love.draw ()
-	love.graphics.draw(display, 0, 0, 0.0, 16.0)
+	love.graphics.push()
+	love.graphics.scale(16)
+	love.graphics.draw(displayGrid)
+	love.graphics.pop()
+	-- love.graphics.draw(displayPic, 0, 0, 0.0, 16.0)
 end
