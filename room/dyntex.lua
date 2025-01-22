@@ -30,23 +30,15 @@ local pic = {
 	fbuffer_1 = createFloatBuffer(256),
 	fbuffer_a = createFloatBuffer(256),
 	fbuffer_b = createFloatBuffer(256),
-	tickCounter = 0,
 	c = false,
 }
 
-function pic:createImage ()
-	return love.graphics.newImage(self.imageData)
+function pic:getAddress ()
+	return ffi.cast('uint8_t*', self.imageData:getFFIPointer())
 end
 
-function pic:setPixelI (i, r, g, b, a)
-	if 0 <= i and i < self.count then
-		local grid = self.grid
-		local j = i * 4
-		grid[j] = band(r, 0xFF)
-		grid[j+1] = band(g, 0xFF)
-		grid[j+2] = band(b, 0xFF)
-		grid[j+3] = band(a, 0xFF)
-	end
+function pic:createImage ()
+	return love.graphics.newImage(self.imageData)
 end
 
 function pic:swapBuffers ()
@@ -54,8 +46,6 @@ function pic:swapBuffers ()
 end
 
 function pic:step ()
-	self.tickCounter = self.tickCounter + 1
-	
 	local field_1158_g = self.fbuffer_0
 	local fbuffer_what = self.fbuffer_1
 	local fbuffer_a = self.fbuffer_a
@@ -89,7 +79,7 @@ function pic:step ()
 
 	self:swapBuffers()
 	
-	local a = self.grid
+	local a = self:getAddress()
 	for i8 = 1, 256 do
 		local f1 = clamp(field_1158_g[i8], 0, 1) ^ 2
 		local i9 = floor(10 + f1 * 21)
@@ -117,9 +107,6 @@ function love.load ()
 
 	local p = love.image.newImageData(pic_w, pic_h)
 	pic.imageData = p
-	pic.grid = ffi.cast('uint8_t*', p:getFFIPointer())
-	pic.count = pic_w * pic_h
-	
 
 	displayPic = pic:createImage()
 	displayGrid = love.graphics.newSpriteBatch(displayPic)
@@ -137,15 +124,16 @@ function love.keypressed (k)
 	end
 end
 
-local nextThink = -1
-local thinkTime = 1.0 / 20
-function love.update ()
-	local t = love.timer.getTime()
-	if t >= nextThink then
+local thinker = require'thinker'(
+	20,
+	function ()
 		pic:step()
-		nextThink = t + thinkTime
 		displayPic:replacePixels(pic.imageData)
 	end
+)
+
+function love.update ()
+	thinker:step()
 end
 
 function love.draw ()
