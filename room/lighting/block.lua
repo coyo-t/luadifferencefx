@@ -27,20 +27,34 @@ register 'air' {
 	lightAttenuation = 0,
 }
 
+register 'wall' {
+	model = {
+		texture = { 1, 1 },
+	},
+	lightEmission = 0,
+	lightAttenuation = 0xFF,
+}
+
 register 'stone' {
-	texture = { 1, 0 },
+	model = {
+		texture = { 1, 0 },
+	},
 	lightEmission = 0,
 	lightAttenuation = 0xFF,
 }
 
 register 'dirt' {
-	texture = { 2, 0 },
+	model = {
+		texture = { 2, 0 },
+	},
 	lightEmission = 0,
 	lightAttenuation = 0xFF,
 }
 
 register 'glowstone' {
-	texture = { 9, 6 },
+	model = {
+		texture = { 9, 6 },
+	},
 	lightEmission = 15,
 	lightAttenuation = 0xFF,
 }

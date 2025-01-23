@@ -101,12 +101,14 @@ local function drawGrid ()
 	local grid = world:getGrid()
 	local wide, tall = world:getSize()
 	for i = 1, world:getCount() do
-		local sample = grid[i]
 		local x = (i - 1) % wide
 		local y = floor((i - 1) / wide)
-		local luma = sample / 15
-		love.graphics.setColor(luma, luma, luma, 1.0)
+		local sample = grid[i]
+		if sample == 'air' then
+			goto continue
+		end
 		love.graphics.rectangle('fill', x, y, 1, 1)
+		::continue::
 	end
 	love.graphics.setLineWidth(1.0 / view.zoom)
 	love.graphics.setColor(1, 1, 1, 1.0)
@@ -129,9 +131,9 @@ function love.draw ()
 	local gx, gy = floor(globalMouseX), floor(globalMouseY)
 	if not mouseGrabbed then
 		if love.mouse.isDown(1) then
-			world:setAt(gx, gy, 0)
+			world:setAt(gx, gy, 'air')
 		elseif love.mouse.isDown(2) then
-			world:setAt(gx, gy, 15)
+			world:setAt(gx, gy, 'stone')
 		end
 	end
 

@@ -21,7 +21,7 @@ function World:setAt (x, y, value)
 	local wide, tall = self:getSize()
 	if 0 <= x and x < wide and 0 <= y and y < tall then
 		local addr = (y * wide + x) + 1
-		self.grid[addr] = floor(band(value, 0xF))
+		self.grid[addr] = value
 	end
 end
 
@@ -29,7 +29,7 @@ local function createWorld (wide, tall)
 	local count = wide * tall
 	local grid = {}
 	for i = 1, count do
-		grid[i] = floor(love.math.random(0, 15))
+		grid[i] = 'air'
 	end
 	return setmetatable({
 		grid = grid,
