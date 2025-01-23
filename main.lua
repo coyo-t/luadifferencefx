@@ -2,7 +2,8 @@
 local firstroom = (
 	-- 'aetherlense'
 	-- 'roto'
-	'dyntex'
+	-- 'dyntex'
+	'lighting'
 )
 
 
