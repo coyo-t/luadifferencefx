@@ -3,9 +3,8 @@ local firstroom = (
 	-- 'aetherlense'
 	-- 'roto'
 	-- 'dyntex'
-	'lighting'
+	'lighting.room'
 )
-
 
 require(('room.%s'):format(firstroom))
 

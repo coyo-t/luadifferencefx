@@ -1,17 +1,14 @@
+local pathOfThisFile = ...
+local folderOfThisFile = (...):match("(.-)[^%.]+$")
 
 local bit = require'bit'
+local band = bit.band
 local floor = math.floor
 local exp = math.exp
 local sin = math.sin
 local pi = math.pi
 
-local gridSize = 16
-local gridCount = gridSize ^ 2
-local grid = {}
-
-for i = 1, gridCount do
-	grid[i] = floor(love.math.random(0, 15))
-end
+local world = require(folderOfThisFile..'world')(16, 16)
 
 local view = {
 	x = 0,
@@ -45,6 +42,7 @@ function love.load ()
 end
 
 local mx, my = 0, 0
+local globalMouseX, globalMouseY = 0, 0
 
 function love.wheelmoved (wx, wy)
 	if wy ~= 0 then
@@ -55,6 +53,7 @@ end
 
 function love.mousereleased (x, y, button)
 	if button == 3 and releaseMouse() then
+		mx,my = love.mouse.getPosition()
 		return
 	end
 	
@@ -78,18 +77,32 @@ function love.mousemoved (x, y, dx, dy)
 		local rcp = 1.0 / view.zoom
 		view.x = view.x - dx * rcp
 		view.y = view.y - dy * rcp
+		mx = mx + dx
+		my = my + dy
+		return
 	end
+	mx = x
+	my = y
 end
 
 function love.update ()
-
+	if not mouseGrabbed then
+		local mx, my = love.mouse.getPosition()
+		local ww, wh = love.graphics.getDimensions()
+		local zoom = view.zoom
+		local rcpZoom = 1.0 / zoom
+		globalMouseX = (mx-ww*0.5) * rcpZoom + view.x
+		globalMouseY = (my-wh*0.5) * rcpZoom + view.y
+	end
 end
 
 local function drawGrid ()
-	for i = 1, gridCount do
+	local grid = world:getGrid()
+	local wide, tall = world:getSize()
+	for i = 1, world:getCount() do
 		local sample = grid[i]
-		local x = (i - 1) % gridSize
-		local y = floor((i - 1) / gridSize)
+		local x = (i - 1) % wide
+		local y = floor((i - 1) / wide)
 		local luma = sample / 15
 		love.graphics.setColor(luma, luma, luma, 1.0)
 		love.graphics.rectangle('fill', x, y, 1, 1)
@@ -107,15 +120,21 @@ function love.draw ()
 	love.graphics.scale(vzoom)
 	-- love.graphics.translate(-hw, -hh)
 	love.graphics.translate(-view.x+hw*rcpzoom, -view.y+hh*rcpzoom)
-	drawGrid()
+	
+	local gx, gy = floor(globalMouseX), floor(globalMouseY)
+	if not mouseGrabbed then
+		if love.mouse.isDown(1) then
+			world:setAt(gx, gy, 0)
+		elseif love.mouse.isDown(2) then
+			world:setAt(gx, gy, 15)
+		end
+	end
 
+
+	drawGrid()
 	do
 		local t = love.timer.getTime()
 		local pulse = (sin(t * pi * 4) * 0.5 + 0.5) * 0.05
-		local mx, my = love.mouse.getPosition()
-		local gx, gy = love.graphics.inverseTransformPoint(mx, my)
-		gx = floor(gx)
-		gy = floor(gy)
 		love.graphics.setColor(1, 1, 0, 1.0)
 		local sz = pulse * 2
 		love.graphics.setLineWidth(1.0 / view.zoom)
