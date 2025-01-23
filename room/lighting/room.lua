@@ -8,7 +8,7 @@ local exp = math.exp
 local sin = math.sin
 local pi = math.pi
 
-local world = require(folderOfThisFile..'world')(16, 16)
+local world = require(folderOfThisFile..'world')(64, 64)
 
 local view = {
 	x = 0,
@@ -107,6 +107,10 @@ local function drawGrid ()
 		love.graphics.setColor(luma, luma, luma, 1.0)
 		love.graphics.rectangle('fill', x, y, 1, 1)
 	end
+	love.graphics.setLineWidth(1.0 / view.zoom)
+	love.graphics.setColor(1, 1, 1, 1.0)
+	local ww, wh = world:getSize()
+	love.graphics.rectangle('line', 0, 0, ww, wh)
 end
 
 function love.draw ()
