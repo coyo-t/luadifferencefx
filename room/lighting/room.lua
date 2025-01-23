@@ -1,5 +1,6 @@
-local pathOfThisFile = ...
-local folderOfThisFile = (...):match("(.-)[^%.]+$")
+local textures = require'coyote.texture'
+
+local blocks = require'room.lighting.block'
 
 local bit = require'bit'
 local band = bit.band
@@ -8,7 +9,7 @@ local exp = math.exp
 local sin = math.sin
 local pi = math.pi
 
-local world = require(folderOfThisFile..'world')(64, 64)
+local world = require('room.lighting.world')(64, 64)
 
 local view = {
 	x = 0,
