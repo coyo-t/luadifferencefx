@@ -9,7 +9,16 @@ local exp = math.exp
 local sin = math.sin
 local pi = math.pi
 
-local world = require('room.lighting.world')(64, 64)
+local palette = {
+	'stone',
+	'dirt',
+	'glowstone',
+}
+local paletteCurrent = 0
+
+
+local world = require 'room.lighting.world' (64, 64)
+local worldDirty = true
 
 local view = {
 	x = 0,
@@ -98,22 +107,25 @@ function love.update ()
 end
 
 local function drawGrid ()
+	love.graphics.setLineWidth(1.0 / view.zoom)
+	love.graphics.setColor(1, 1, 1, 1.0)
+	local ww, wh = world:getSize()
+	love.graphics.rectangle('line', 0, 0, ww, wh)
+	worldDirty = false
+
 	local grid = world:getGrid()
 	local wide, tall = world:getSize()
 	for i = 1, world:getCount() do
 		local x = (i - 1) % wide
 		local y = floor((i - 1) / wide)
-		local sample = grid[i]
-		if sample == 'air' then
+		local sample = blocks[grid[i]]
+		local model = sample.model
+		if model == nil then
 			goto continue
 		end
 		love.graphics.rectangle('fill', x, y, 1, 1)
 		::continue::
 	end
-	love.graphics.setLineWidth(1.0 / view.zoom)
-	love.graphics.setColor(1, 1, 1, 1.0)
-	local ww, wh = world:getSize()
-	love.graphics.rectangle('line', 0, 0, ww, wh)
 end
 
 function love.draw ()

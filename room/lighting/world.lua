@@ -28,11 +28,14 @@ end
 local function createWorld (wide, tall)
 	local count = wide * tall
 	local grid = {}
+	local lightmap = {}
 	for i = 1, count do
 		grid[i] = 'air'
+		lightmap[i] = 0
 	end
 	return setmetatable({
 		grid = grid,
+		lightmap = lightmap,
 		wide = wide,
 		tall = tall,
 		count = count,
